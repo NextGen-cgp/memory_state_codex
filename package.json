@@ -1,0 +1,34 @@
+{
+  "name": "memory-state-codex",
+  "version": "0.1.0",
+  "description": "Install portable curated SQLite memory for Codex agents.",
+  "license": "MIT",
+  "bin": {
+    "memory-state-codex": "bin/install.js"
+  },
+  "files": [
+    "AGENTS-LITE.md",
+    "AGENTS-PLUS.md",
+    "LICENSE",
+    "README.md",
+    "bin/install.js",
+    "memories/README.md",
+    "memories/memory_state.db",
+    "skills/curated-memory/SKILL.md",
+    "skills/curated-memory/agents/openai.yaml",
+    "skills/curated-memory/scripts/memory.py",
+    "skills/curated-memory-plus/SKILL.md",
+    "skills/curated-memory-plus/agents/openai.yaml",
+    "skills/curated-memory-plus/scripts/memory.py"
+  ],
+  "keywords": [
+    "codex",
+    "agent",
+    "memory",
+    "sqlite",
+    "fts5"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

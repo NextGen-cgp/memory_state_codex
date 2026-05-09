@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+
+*.db-wal
+*.db-shm
+*.sqlite-wal
+*.sqlite-shm
+
+.DS_Store
+Thumbs.db
+
+tmp/
+.tmp/
+test-memory*.db
+
+npm-debug.log*
+*.tgz

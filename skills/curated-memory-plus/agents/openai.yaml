@@ -1,0 +1,4 @@
+interface:
+  display_name: "Curated Memory Plus"
+  short_description: "Persist memory with searchable sessions"
+  default_prompt: "Use $curated-memory-plus to save durable project memory with session traceability."
