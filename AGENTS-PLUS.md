@@ -21,6 +21,11 @@
 - Log the user's substantive request with `add-message --role user`.
 - Log assistant outcomes as concise assistant messages. Do not store hidden chain-of-thought; store only user-visible summaries, decisions, and relevant implementation notes.
 - Log important tool results as concise `tool` messages when they explain future-relevant decisions or failures.
+- Set `--relevance` when logging messages:
+  - `0`: routine message with little future value;
+  - `1`: useful context;
+  - `2`: important implementation detail, user preference, or tool result;
+  - `3`: key decision, final session summary, verification result, or memory provenance anchor.
 - End the session with `end-session` when the task is complete.
 - For trivial one-off answers, session logging may be skipped only when the answer has no durable context value.
 
@@ -28,8 +33,8 @@ Example:
 
 ```bash
 python ~/.codex/skills/curated-memory-plus/scripts/memory.py start-session --title "Implement auth fix" --project-path "/path/to/project"
-python ~/.codex/skills/curated-memory-plus/scripts/memory.py add-message --session-id "ses_..." --role user --content "Fix the auth redirect bug."
-python ~/.codex/skills/curated-memory-plus/scripts/memory.py add-message --session-id "ses_..." --role assistant --content "Fixed the auth redirect bug in middleware and verified the login flow."
+python ~/.codex/skills/curated-memory-plus/scripts/memory.py add-message --session-id "ses_..." --role user --content "Fix the auth redirect bug." --relevance 1
+python ~/.codex/skills/curated-memory-plus/scripts/memory.py add-message --session-id "ses_..." --role assistant --content "Fixed the auth redirect bug in middleware and verified the login flow." --relevance 3
 python ~/.codex/skills/curated-memory-plus/scripts/memory.py end-session "ses_..."
 ```
 
@@ -51,6 +56,7 @@ python ~/.codex/skills/curated-memory-plus/scripts/memory.py search "API contrac
 - The `search` command uses normal FTS5 first, trigram FTS as a complement or fallback, and SQL `LIKE` as the final fallback.
 - `memory_items` are searched by curated-memory scope.
 - `messages` are searched through their `sessions`, so project filters scale by joining `messages -> sessions` and applying `sessions.project_path`.
+- Message search returns `relevance` and uses it to promote important messages after textual rank, and as the primary ordering signal for `LIKE` fallback matches.
 - Use `--substring` when looking for fragments inside identifiers, file paths, compound names, or text without clear word boundaries.
 - Query retries are enabled by default. If the original query returns no results, the CLI retries with derived significant terms up to `--max-retries` (default `5`).
 - Results include `match_type` with one of: `fulltext`, `trigram`, or `like`.

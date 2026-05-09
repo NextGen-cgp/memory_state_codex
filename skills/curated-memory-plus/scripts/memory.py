@@ -834,13 +834,13 @@ def fulltext_search_messages(
         rows = con.execute(
             f"""
             SELECT msg.id, msg.session_id, s.title AS session_title,
-                   s.project_path, msg.role, msg.content, msg.created_at,
+                   s.project_path, msg.role, msg.content, msg.relevance, msg.created_at,
                    bm25(messages_fts) AS rank, 'fulltext' AS match_type
             FROM messages_fts
             JOIN messages msg ON msg.id = messages_fts.message_id
             JOIN sessions s ON s.id = msg.session_id
             WHERE messages_fts MATCH ? AND {filter_sql}
-            ORDER BY rank, msg.created_at DESC
+            ORDER BY rank, msg.relevance DESC, msg.created_at DESC
             LIMIT ?
             """,
             values,
@@ -864,13 +864,13 @@ def trigram_search_messages(
         rows = con.execute(
             f"""
             SELECT msg.id, msg.session_id, s.title AS session_title,
-                   s.project_path, msg.role, msg.content, msg.created_at,
+                   s.project_path, msg.role, msg.content, msg.relevance, msg.created_at,
                    bm25(messages_fts_trigram) AS rank, 'trigram' AS match_type
             FROM messages_fts_trigram
             JOIN messages msg ON msg.id = messages_fts_trigram.message_id
             JOIN sessions s ON s.id = msg.session_id
             WHERE messages_fts_trigram MATCH ? AND {filter_sql}
-            ORDER BY rank, msg.created_at DESC
+            ORDER BY rank, msg.relevance DESC, msg.created_at DESC
             LIMIT ?
             """,
             values,
@@ -893,12 +893,12 @@ def like_search_messages(
     rows = con.execute(
         f"""
         SELECT msg.id, msg.session_id, s.title AS session_title,
-               s.project_path, msg.role, msg.content, msg.created_at,
+               s.project_path, msg.role, msg.content, msg.relevance, msg.created_at,
                0 AS rank, 'like' AS match_type
         FROM messages msg
         JOIN sessions s ON s.id = msg.session_id
         WHERE msg.content LIKE ? AND {filter_sql}
-        ORDER BY msg.created_at DESC
+        ORDER BY msg.relevance DESC, msg.created_at DESC
         LIMIT ?
         """,
         values,

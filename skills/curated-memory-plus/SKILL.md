@@ -42,8 +42,10 @@ python ~/.codex/skills/curated-memory-plus/scripts/memory.py start-session --tit
 Log a message:
 
 ```bash
-python ~/.codex/skills/curated-memory-plus/scripts/memory.py add-message --session-id "ses_..." --role user --content "Change the API envelope."
+python ~/.codex/skills/curated-memory-plus/scripts/memory.py add-message --session-id "ses_..." --role user --content "Change the API envelope." --relevance 1
 ```
+
+Use `--relevance` consistently: `0` routine, `1` useful context, `2` important implementation detail/preference/tool result, `3` key decision/final summary/verification/provenance anchor. Message search returns `relevance` and uses it to promote important messages after textual rank, and as the primary ordering signal for `LIKE` fallback matches.
 
 Search:
 

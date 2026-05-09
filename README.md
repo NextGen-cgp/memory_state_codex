@@ -218,6 +218,15 @@ The LITE workflow stores curated memories directly in `memory_items`. Session an
 
 The PLUS workflow requires `start-session`, `add-message`, and `end-session` for substantive work. In PLUS mode, `remember` requires `--session-id`; `--message-id` is verified against that session when provided. Use `--allow-unlinked` only for exceptional imported/global memories that genuinely have no session provenance.
 
+PLUS message logging supports `--relevance`:
+
+- `0`: routine message with little future value.
+- `1`: useful context.
+- `2`: important implementation detail, user preference, or tool result.
+- `3`: key decision, final session summary, verification result, or memory provenance anchor.
+
+Message search returns `relevance` and uses it to promote important messages after textual rank. For `LIKE` fallback matches, relevance is the primary ordering signal before recency.
+
 ## Privacy
 
 Do not store secrets, credentials, tokens, API keys, cookies, raw `.env` values, or unnecessary personal data. This system is intended for durable working context, not private secret storage.
