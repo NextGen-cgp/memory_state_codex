@@ -1,6 +1,6 @@
 {
   "name": "memory-state-codex",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Install portable curated SQLite memory for Codex agents.",
   "license": "MIT",
   "bin": {
