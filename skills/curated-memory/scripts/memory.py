@@ -7,6 +7,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import re
 import sqlite3
 import sys
 import uuid
@@ -15,6 +16,41 @@ from typing import Any
 
 
 SCHEMA_VERSION = "1"
+STOP_WORDS = {
+    "a",
+    "al",
+    "and",
+    "are",
+    "as",
+    "con",
+    "de",
+    "del",
+    "el",
+    "en",
+    "for",
+    "he",
+    "in",
+    "is",
+    "la",
+    "las",
+    "lo",
+    "los",
+    "me",
+    "mi",
+    "mis",
+    "of",
+    "on",
+    "or",
+    "por",
+    "project",
+    "proyecto",
+    "que",
+    "the",
+    "to",
+    "un",
+    "una",
+    "y",
+}
 
 
 def now() -> str:
@@ -457,24 +493,82 @@ def search(args: argparse.Namespace, con: sqlite3.Connection) -> None:
         if args.project_path or args.scope == "project"
         else None
     )
-    memories = search_memory(
-        con,
-        args.query,
-        args.limit,
-        args.scope,
-        ppath,
-        args.include_global,
-        args.substring,
-        args.trigram,
-    )
+    attempts = build_query_attempts(args.query, args.max_retries if args.retry_queries else 0)
+    memories: list[dict[str, Any]] = []
     messages: list[dict[str, Any]] = []
-    if args.include_messages:
-        messages = search_messages(con, args.query, args.limit, args.substring, args.trigram)
+    used_attempts: list[dict[str, Any]] = []
+
+    for index, attempt in enumerate(attempts, start=1):
+        attempt_memories = search_memory(
+            con,
+            attempt,
+            args.limit,
+            args.scope,
+            ppath,
+            args.include_global,
+            args.substring,
+            args.trigram,
+        )
+        attempt_messages: list[dict[str, Any]] = []
+        if args.include_messages:
+            attempt_messages = search_messages(
+                con,
+                attempt,
+                args.limit,
+                args.substring,
+                args.trigram,
+            )
+        used_attempts.append(
+            {
+                "index": index,
+                "query": attempt,
+                "memory_items": len(attempt_memories),
+                "messages": len(attempt_messages),
+            }
+        )
+        memories = merge_results(memories, attempt_memories, args.limit)
+        messages = merge_results(messages, attempt_messages, args.limit)
+        if memories or messages:
+            break
+
     ts = now()
     for item in memories:
         con.execute("UPDATE memory_items SET last_used_at = ? WHERE id = ?", (ts, item["id"]))
     con.commit()
-    emit({"memory_items": memories, "messages": messages})
+    emit({"memory_items": memories, "messages": messages, "search_attempts": used_attempts})
+
+
+def build_query_attempts(query: str, max_retries: int) -> list[str]:
+    attempts = [query]
+    if max_retries <= 0:
+        return attempts
+
+    terms = extract_query_terms(query)
+    candidates: list[str] = []
+    if terms:
+        candidates.extend(terms)
+        if len(terms) > 1:
+            candidates.append(" OR ".join(terms))
+
+    for candidate in candidates:
+        if candidate not in attempts:
+            attempts.append(candidate)
+        if len(attempts) >= max_retries + 1:
+            break
+    return attempts
+
+
+def extract_query_terms(query: str) -> list[str]:
+    raw_terms = re.findall(r"[\w.-]+", query, flags=re.UNICODE)
+    terms: list[str] = []
+    for term in raw_terms:
+        normalized = term.strip("_-.").lower()
+        if len(normalized) < 3 or normalized in STOP_WORDS:
+            continue
+        if normalized not in terms:
+            terms.append(normalized)
+    terms.sort(key=len, reverse=True)
+    return terms
 
 
 def search_memory(
@@ -831,6 +925,18 @@ def build_parser() -> argparse.ArgumentParser:
         action=argparse.BooleanOptionalAction,
         default=True,
         help="Use trigram FTS as a complement/fallback when available.",
+    )
+    p.add_argument(
+        "--retry-queries",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Retry with derived query terms when the original query has no results.",
+    )
+    p.add_argument(
+        "--max-retries",
+        type=int,
+        default=5,
+        help="Maximum derived query retries after the original query.",
     )
 
     p = sub.add_parser("list")

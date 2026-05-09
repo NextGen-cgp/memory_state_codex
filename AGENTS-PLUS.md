@@ -52,7 +52,12 @@ python ~/.codex/skills/curated-memory-plus/scripts/memory.py search "API contrac
 - `memory_items` are searched by curated-memory scope.
 - `messages` are searched through their `sessions`, so project filters scale by joining `messages -> sessions` and applying `sessions.project_path`.
 - Use `--substring` when looking for fragments inside identifiers, file paths, compound names, or text without clear word boundaries.
+- Query retries are enabled by default. If the original query returns no results, the CLI retries with derived significant terms up to `--max-retries` (default `5`).
 - Results include `match_type` with one of: `fulltext`, `trigram`, or `like`.
+- Results include `search_attempts` so the agent can see which query variant produced matches.
+- If deterministic retries return no useful context, the agent should perform up to 3 semantic retry searches before concluding there is no memory. Rewrite the query using likely synonyms, project-specific nouns, session titles, filenames, feature names, API names, or broader concepts from the user's request.
+- Prefer broad-to-specific semantic retries: first the project/product name, then the feature/domain term, then the suspected file/API/decision term. Avoid repeating failed query wording.
+- Use `search_attempts` to decide the next retry. If only generic terms matched, issue a more specific semantic query; if nothing matched, broaden the query.
 
 Example:
 

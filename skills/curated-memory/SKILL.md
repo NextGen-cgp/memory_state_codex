@@ -37,7 +37,9 @@ Search:
 python ~/.codex/skills/curated-memory/scripts/memory.py search "API contract" --scope project --project-path "/path/to/project"
 ```
 
-Search uses normal FTS5 first, trigram FTS as a complement/fallback, and `LIKE` as the final fallback. Use `--substring` when looking for fragments inside identifiers, paths, compound names, or text without clear word boundaries:
+Search uses normal FTS5 first, trigram FTS as a complement/fallback, and `LIKE` as the final fallback. Use `--substring` when looking for fragments inside identifiers, paths, compound names, or text without clear word boundaries. Query retries are enabled by default: when the original query has no results, the CLI retries with derived significant terms up to `--max-retries` (default `5`) and reports `search_attempts`.
+
+If deterministic retries return no useful context, perform up to 3 semantic retry searches before concluding there is no memory. Rewrite the query using likely synonyms, project-specific nouns, filenames, feature names, API names, or broader concepts from the user's request. Use `search_attempts` to choose whether to broaden or narrow the next retry.
 
 ```bash
 python ~/.codex/skills/curated-memory/scripts/memory.py search "velope" --scope project --project-path "/path/to/project" --substring

@@ -200,6 +200,10 @@ Results include `match_type`, which can be `fulltext`, `trigram`, or `like`.
 
 In PLUS mode, `--include-messages` searches `messages` through `sessions` and applies project filters through `sessions.project_path`, so message history can scale by repository instead of searching every saved message globally.
 
+Both LITE and PLUS enable query retries by default. If the original natural-language query returns no results, the CLI retries with derived significant terms up to `--max-retries` (default `5`) and returns a `search_attempts` audit list. Disable this with `--no-retry-queries`.
+
+The AGENTS profiles add a second semantic retry layer for the AI agent. If deterministic retries return no useful context, the agent should run up to 3 additional searches with rewritten queries based on synonyms, project-specific nouns, filenames, feature names, API names, session titles in PLUS, or broader concepts from the user's request.
+
 ## Data Model
 
 - `memory_items`: curated durable memories.
