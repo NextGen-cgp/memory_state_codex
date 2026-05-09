@@ -64,8 +64,10 @@ python ~/.codex/skills/curated-memory-plus/scripts/memory.py search "velope" --s
 Remember:
 
 ```bash
-python ~/.codex/skills/curated-memory-plus/scripts/memory.py remember --scope project --project-path "/path/to/project" --kind decision --key "api-envelope" --content "API routes return JSON envelopes shaped as { data, error }." --session-id "ses_..." --message-id "msg_..."
+python ~/.codex/skills/curated-memory-plus/scripts/memory.py remember --scope project --project-path "/path/to/project" --kind decision --key "api-envelope" --content "API routes return JSON envelopes shaped as { data, error }." --confidence 1.0 --session-id "ses_..." --message-id "msg_..."
 ```
+
+Use `--confidence` consistently: `1.0` verified fact/user preference/project contract, `0.8` reliable working conclusion, `0.5` unverified inference, `0.2` weak provisional note. Search uses confidence to promote more reliable memories after textual rank, and as the primary ordering signal for `LIKE` fallback matches.
 
 Use `--allow-unlinked` only for exceptional imported/global memories that genuinely have no session provenance.
 

@@ -48,8 +48,10 @@ python ~/.codex/skills/curated-memory/scripts/memory.py search "velope" --scope 
 Remember:
 
 ```bash
-python ~/.codex/skills/curated-memory/scripts/memory.py remember --scope project --project-path "/path/to/project" --kind decision --key "api-envelope" --content "API routes return JSON envelopes shaped as { data, error }."
+python ~/.codex/skills/curated-memory/scripts/memory.py remember --scope project --project-path "/path/to/project" --kind decision --key "api-envelope" --content "API routes return JSON envelopes shaped as { data, error }." --confidence 1.0
 ```
+
+Use `--confidence` consistently: `1.0` verified fact/user preference/project contract, `0.8` reliable working conclusion, `0.5` unverified inference, `0.2` weak provisional note. Search uses confidence to promote more reliable memories after textual rank, and as the primary ordering signal for `LIKE` fallback matches.
 
 List:
 

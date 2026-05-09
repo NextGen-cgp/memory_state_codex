@@ -146,7 +146,8 @@ python ~/.codex/skills/curated-memory/scripts/memory.py remember \
   --project-path "/path/to/project" \
   --kind decision \
   --key "api-error-envelope" \
-  --content "API routes return errors as { data: null, error: { code, message } }."
+  --content "API routes return errors as { data: null, error: { code, message } }." \
+  --confidence 1.0
 ```
 
 Search project memory, including global memory by default:
@@ -198,6 +199,8 @@ The CLI searches in this order:
 
 Results include `match_type`, which can be `fulltext`, `trigram`, or `like`.
 
+Search returns `confidence` for `memory_items` and uses it to promote reliable memories after textual rank. For `LIKE` fallback matches, confidence is the primary ordering signal before recency.
+
 In PLUS mode, `--include-messages` searches `messages` through `sessions` and applies project filters through `sessions.project_path`, so message history can scale by repository instead of searching every saved message globally.
 
 Both LITE and PLUS enable query retries by default. If the original natural-language query returns no results, the CLI retries with derived significant terms up to `--max-retries` (default `5`) and returns a `search_attempts` audit list. Disable this with `--no-retry-queries`.
@@ -217,6 +220,15 @@ The AGENTS profiles add a second semantic retry layer for the AI agent. If deter
 The LITE workflow stores curated memories directly in `memory_items`. Session and message logging is optional.
 
 The PLUS workflow requires `start-session`, `add-message`, and `end-session` for substantive work. In PLUS mode, `remember` requires `--session-id`; `--message-id` is verified against that session when provided. Use `--allow-unlinked` only for exceptional imported/global memories that genuinely have no session provenance.
+
+Use `--confidence` when storing memory:
+
+- `1.0`: directly verified fact, explicit user preference, or confirmed project contract.
+- `0.8`: reliable working conclusion from completed work.
+- `0.5`: reasonable inference that has not been directly verified.
+- `0.2`: weak/provisional note that should be treated cautiously.
+
+Prefer `0.8` when unsure. Use values below `0.8` only when the memory text clearly signals uncertainty.
 
 PLUS message logging supports `--relevance`:
 

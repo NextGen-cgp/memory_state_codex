@@ -54,11 +54,17 @@ python ~/.codex/skills/curated-memory/scripts/memory.py search "velope" --scope 
 - Prefer short, specific, actionable memory items.
 - Use `scope=project` for repository-specific knowledge and `scope=global` for user or tooling preferences.
 - Use a stable `key` when the memory represents a rule or decision that should be updated instead of duplicated.
+- Set `--confidence` when storing memory:
+  - `1.0`: directly verified fact, explicit user preference, or confirmed project contract;
+  - `0.8`: reliable working conclusion from completed work;
+  - `0.5`: reasonable inference that has not been directly verified;
+  - `0.2`: weak/provisional note that should be treated cautiously.
+- Prefer `0.8` when unsure. Use values below `0.8` only when the memory text clearly signals uncertainty.
 
 Example:
 
 ```bash
-python ~/.codex/skills/curated-memory/scripts/memory.py remember --scope project --project-path "/path/to/project" --kind decision --key "api-envelope" --content "API routes return JSON envelopes shaped as { data, error }."
+python ~/.codex/skills/curated-memory/scripts/memory.py remember --scope project --project-path "/path/to/project" --kind decision --key "api-envelope" --content "API routes return JSON envelopes shaped as { data, error }." --confidence 1.0
 ```
 
 ### What Not To Store

@@ -701,7 +701,7 @@ def fulltext_search_memory(
         FROM memory_items_fts
         JOIN memory_items m ON m.id = memory_items_fts.memory_id
         WHERE memory_items_fts MATCH ? AND {filter_sql}
-        ORDER BY rank, m.updated_at DESC
+        ORDER BY rank, m.confidence DESC, m.updated_at DESC
         LIMIT ?
     """
     try:
@@ -727,7 +727,7 @@ def trigram_search_memory(
         FROM memory_items_fts_trigram
         JOIN memory_items m ON m.id = memory_items_fts_trigram.memory_id
         WHERE memory_items_fts_trigram MATCH ? AND {filter_sql}
-        ORDER BY rank, m.updated_at DESC
+        ORDER BY rank, m.confidence DESC, m.updated_at DESC
         LIMIT ?
     """
     try:
@@ -766,7 +766,7 @@ def like_search_memory(
                confidence, updated_at, 0 AS rank, 'like' AS match_type
         FROM memory_items
         WHERE {' AND '.join(filters)}
-        ORDER BY updated_at DESC
+        ORDER BY confidence DESC, updated_at DESC
         LIMIT ?
         """,
         values,
