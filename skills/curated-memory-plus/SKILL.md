@@ -22,7 +22,7 @@ The database is global to Codex and independent from project databases. Do not s
 3. Log the user's substantive request and assistant outcomes with `add-message`.
 4. Search memory before substantial work, usually with `--include-messages`.
 5. Save durable, useful facts with `remember` after they are confirmed or strongly implied by completed work.
-6. Link curated memories to their provenance with `--session-id` and `--message-id` when available.
+6. Link curated memories to their provenance. `remember` requires `--session-id`; add `--message-id` when the memory is grounded in a specific logged message.
 7. End the session with `end-session`.
 
 ## Commands
@@ -62,6 +62,8 @@ Remember:
 ```bash
 python ~/.codex/skills/curated-memory-plus/scripts/memory.py remember --scope project --project-path "/path/to/project" --kind decision --key "api-envelope" --content "API routes return JSON envelopes shaped as { data, error }." --session-id "ses_..." --message-id "msg_..."
 ```
+
+Use `--allow-unlinked` only for exceptional imported/global memories that genuinely have no session provenance.
 
 List:
 

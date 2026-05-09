@@ -322,6 +322,7 @@ def insert_optional_fts(
 
 def remember(args: argparse.Namespace, con: sqlite3.Connection) -> None:
     ensure_initialized(con)
+    validate_memory_provenance(args, con)
     ts = now()
     scope = args.scope
     ppath = project_path(args.project_path, scope)
@@ -398,6 +399,34 @@ def remember(args: argparse.Namespace, con: sqlite3.Connection) -> None:
     )
     con.commit()
     emit({"id": memory_id, "event": event_type, "updated_at": ts})
+
+
+def validate_memory_provenance(args: argparse.Namespace, con: sqlite3.Connection) -> None:
+    if args.allow_unlinked:
+        return
+
+    if not args.session_id:
+        raise SystemExit(
+            "curated-memory-plus requires --session-id for remember. "
+            "Use --allow-unlinked only for exceptional imported/global memories."
+        )
+
+    session = con.execute(
+        "SELECT id FROM sessions WHERE id = ?",
+        (args.session_id,),
+    ).fetchone()
+    if not session:
+        raise SystemExit(f"session not found for --session-id: {args.session_id}")
+
+    if args.message_id:
+        message = con.execute(
+            "SELECT id FROM messages WHERE id = ? AND session_id = ?",
+            (args.message_id, args.session_id),
+        ).fetchone()
+        if not message:
+            raise SystemExit(
+                "--message-id must reference a message that belongs to --session-id"
+            )
 
 
 def refresh_memory_fts(con: sqlite3.Connection, memory_id: str) -> None:
@@ -882,6 +911,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--confidence", type=float, default=0.8)
     p.add_argument("--session-id")
     p.add_argument("--message-id")
+    p.add_argument(
+        "--allow-unlinked",
+        action="store_true",
+        help="Allow remember without --session-id for exceptional imported/global memories.",
+    )
     p.add_argument("--metadata-json")
     p.add_argument("--event-detail")
 

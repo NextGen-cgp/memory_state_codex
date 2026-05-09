@@ -71,7 +71,8 @@ python ~/.codex/skills/curated-memory-plus/scripts/memory.py search "velope" --s
 - Prefer short, specific, actionable memory items.
 - Use `scope=project` for repository-specific knowledge and `scope=global` for user or tooling preferences.
 - Use a stable `key` when the memory represents a rule or decision that should be updated instead of duplicated.
-- When a memory comes from a logged session/message, pass `--session-id` and `--message-id` to preserve provenance.
+- `remember` requires `--session-id` in PLUS mode. Pass `--message-id` when the memory is grounded in a specific logged message.
+- Use `--allow-unlinked` only for exceptional imported/global memories that genuinely have no session provenance.
 
 Example:
 

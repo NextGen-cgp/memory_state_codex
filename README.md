@@ -212,7 +212,7 @@ In PLUS mode, `--include-messages` searches `messages` through `sessions` and ap
 
 The LITE workflow stores curated memories directly in `memory_items`. Session and message logging is optional.
 
-The PLUS workflow requires `start-session`, `add-message`, and `end-session` for substantive work, and links curated memories to `source_session_id` and `source_message_id` when provenance is available.
+The PLUS workflow requires `start-session`, `add-message`, and `end-session` for substantive work. In PLUS mode, `remember` requires `--session-id`; `--message-id` is verified against that session when provided. Use `--allow-unlinked` only for exceptional imported/global memories that genuinely have no session provenance.
 
 ## Privacy
 
