@@ -1,7 +1,7 @@
 {
   "name": "memory-state-codex",
   "version": "0.3.0",
-  "description": "Install portable curated SQLite memory for Codex agents.",
+  "description": "Portable curated SQLite memory profiles and skills for Codex and Claude Code agents.",
   "license": "MIT",
   "bin": {
     "memory-state-codex": "bin/install.js"
@@ -9,20 +9,29 @@
   "files": [
     "AGENTS-LITE.md",
     "AGENTS-PLUS.md",
+    "CLAUDE-LITE.md",
+    "CLAUDE-PLUS.md",
     "LICENSE",
     "README.md",
     "bin/install.js",
     "memories/README.md",
     "memories/memory_state.db",
-    "skills/curated-memory/SKILL.md",
-    "skills/curated-memory/agents/openai.yaml",
-    "skills/curated-memory/scripts/memory.py",
-    "skills/curated-memory-plus/SKILL.md",
-    "skills/curated-memory-plus/agents/openai.yaml",
-    "skills/curated-memory-plus/scripts/memory.py"
+    "skills-codex/curated-memory/SKILL.md",
+    "skills-codex/curated-memory/agents/openai.yaml",
+    "skills-codex/curated-memory/scripts/memory.py",
+    "skills-codex/curated-memory-plus/SKILL.md",
+    "skills-codex/curated-memory-plus/agents/openai.yaml",
+    "skills-codex/curated-memory-plus/scripts/memory.py",
+    "skills-claude/curated-memory/SKILL.md",
+    "skills-claude/curated-memory/agents/openai.yaml",
+    "skills-claude/curated-memory/scripts/memory.py",
+    "skills-claude/curated-memory-plus/SKILL.md",
+    "skills-claude/curated-memory-plus/agents/openai.yaml",
+    "skills-claude/curated-memory-plus/scripts/memory.py"
   ],
   "keywords": [
     "codex",
+    "claude",
     "agent",
     "memory",
     "sqlite",
