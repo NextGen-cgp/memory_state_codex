@@ -4,11 +4,14 @@
 
 It contains tables and FTS indexes, but no memories, messages, or sessions.
 
-To install it, copy it to your Codex memories directory:
+To install it, copy it to your Codex or Claude Code memories directory:
 
 ```bash
 mkdir -p ~/.codex/memories
 cp memories/memory_state.db ~/.codex/memories/memory_state.db
+
+mkdir -p ~/.claude/memories
+cp memories/memory_state.db ~/.claude/memories/memory_state.db
 ```
 
 On Windows PowerShell:
@@ -17,10 +20,15 @@ On Windows PowerShell:
 $codexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $HOME ".codex" }
 New-Item -ItemType Directory -Force -Path (Join-Path $codexHome "memories") | Out-Null
 Copy-Item .\memories\memory_state.db (Join-Path $codexHome "memories\memory_state.db") -Force
+
+$claudeHome = if ($env:CLAUDE_HOME) { $env:CLAUDE_HOME } else { Join-Path $HOME ".claude" }
+New-Item -ItemType Directory -Force -Path (Join-Path $claudeHome "memories") | Out-Null
+Copy-Item .\memories\memory_state.db (Join-Path $claudeHome "memories\memory_state.db") -Force
 ```
 
 You may also skip this file and let the CLI create or repair the database:
 
 ```bash
 python ~/.codex/skills/curated-memory/scripts/memory.py init
+python ~/.claude/skills/curated-memory/scripts/memory.py init
 ```

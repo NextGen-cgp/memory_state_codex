@@ -1,8 +1,8 @@
-# Codex Curated Memory
+# Codex and Claude Curated Memory
 
-Portable persistent memory for Codex agents, backed by SQLite.
+Portable persistent memory for Codex and Claude Code agents, backed by SQLite.
 
-This repository packages two reusable global AGENTS profiles, two Codex skills, an empty SQLite database template, and an npm installer. The goal is to give Codex a durable, searchable memory layer without coupling it to any project database.
+This repository packages reusable global profiles for Codex and Claude Code, agent-specific skill folders, an empty SQLite database template, and an npm installer for both providers. The goal is to give agents a durable, searchable memory layer without coupling it to any project database.
 
 ## What It Provides
 
@@ -12,23 +12,33 @@ This repository packages two reusable global AGENTS profiles, two Codex skills, 
 - FTS5 indexes for normal full-text search.
 - Trigram FTS indexes for substring, identifiers, paths, compound names, and CJK-like text boundaries.
 - A Python CLI with no third-party dependencies.
-- A global `AGENTS.md` block that tells Codex when and how to use the memory store.
-- A cross-platform npm installer for Windows, macOS, and Linux.
+- Global `AGENTS.md` profiles that tell Codex when and how to use the memory store.
+- Global `CLAUDE.md` profiles that tell Claude Code when and how to use the memory store.
+- Separate `skills-codex/` and `skills-claude/` trees so each agent resolves its own global paths.
+- A cross-platform npm installer for Codex and Claude Code on Windows, macOS, and Linux.
 
 ## Quick Install
 
 After the package is published to npm:
 
-Install the default LITE mode:
+Install the default LITE mode into both Codex and Claude Code:
 
 ```bash
 npx memory-state-codex
 ```
 
-Install PLUS mode:
+Install PLUS mode into both Codex and Claude Code:
 
 ```bash
 npx memory-state-codex --plus
+```
+
+Install only one provider:
+
+```bash
+npx memory-state-codex --provider codex
+npx memory-state-codex --provider claude
+npx memory-state-codex --plus --provider claude
 ```
 
 The installer resolves the Codex home directory in this order:
@@ -37,16 +47,28 @@ The installer resolves the Codex home directory in this order:
 2. `CODEX_HOME` if set.
 3. `~/.codex`.
 
+It resolves the Claude Code home directory in this order:
+
+1. `--claude-home <path>` if passed.
+2. `CLAUDE_HOME` if set.
+3. `~/.claude`.
+
 It installs:
 
 - `AGENTS-LITE.md` or `AGENTS-PLUS.md` instructions into the global Codex `AGENTS.md`.
-- `skills/curated-memory` or `skills/curated-memory-plus` into the global Codex skills directory.
-- `memories/memory_state.db` into the global Codex memories directory, only if no database exists yet.
+- `skills-codex/curated-memory` or `skills-codex/curated-memory-plus` into the global Codex skills directory.
+- `CLAUDE-LITE.md` or `CLAUDE-PLUS.md` instructions into the global Claude Code `CLAUDE.md`.
+- `skills-claude/curated-memory` or `skills-claude/curated-memory-plus` into the global Claude Code skills directory.
+- `memories/memory_state.db` into each selected provider's memories directory, only if no database exists yet.
 
-The installer is idempotent. It replaces the managed memory block in `AGENTS.md`, refreshes the skill files, and leaves an existing memory database untouched unless `--force-db` is used.
+The installer is idempotent. It replaces the managed memory block in `AGENTS.md` and/or `CLAUDE.md`, refreshes selected provider skill files, and leaves existing memory databases untouched unless `--force-db` is used.
 
 ```bash
+npx memory-state-codex --provider both
 npx memory-state-codex --codex-home ~/.codex
+npx memory-state-codex --claude-home ~/.claude
+npx memory-state-codex --provider codex --codex-home ~/.codex
+npx memory-state-codex --provider claude --claude-home ~/.claude
 npx memory-state-codex --plus
 npx memory-state-codex --dry-run
 npx memory-state-codex --force-db
@@ -57,6 +79,9 @@ On Windows PowerShell:
 ```powershell
 npx memory-state-codex
 npx memory-state-codex --codex-home "$HOME\.codex"
+npx memory-state-codex --claude-home "$HOME\.claude"
+npx memory-state-codex --provider codex
+npx memory-state-codex --provider claude
 ```
 
 ## Repository Layout
@@ -65,6 +90,8 @@ npx memory-state-codex --codex-home "$HOME\.codex"
 .
 |-- AGENTS-LITE.md
 |-- AGENTS-PLUS.md
+|-- CLAUDE-LITE.md
+|-- CLAUDE-PLUS.md
 |-- LICENSE
 |-- README.md
 |-- package.json
@@ -73,7 +100,20 @@ npx memory-state-codex --codex-home "$HOME\.codex"
 |-- memories/
 |   |-- README.md
 |   `-- memory_state.db
-`-- skills/
+|-- skills-codex/
+|   |-- curated-memory/
+|   |   |-- SKILL.md
+|   |   |-- agents/
+|   |   |   `-- openai.yaml
+|   |   `-- scripts/
+|   |       `-- memory.py
+|   `-- curated-memory-plus/
+|       |-- SKILL.md
+|       |-- agents/
+|       |   `-- openai.yaml
+|       `-- scripts/
+|           `-- memory.py
+`-- skills-claude/
     |-- curated-memory/
     |   |-- SKILL.md
     |   |-- agents/
@@ -88,7 +128,7 @@ npx memory-state-codex --codex-home "$HOME\.codex"
             `-- memory.py
 ```
 
-## Manual Install
+## Manual Install For Codex
 
 Pick your Codex home directory:
 
@@ -105,7 +145,7 @@ New-Item -ItemType Directory -Force -Path (Join-Path $codexHome "skills") | Out-
 New-Item -ItemType Directory -Force -Path (Join-Path $codexHome "memories") | Out-Null
 
 Copy-Item .\AGENTS-LITE.md (Join-Path $codexHome "AGENTS.md") -Force
-Copy-Item .\skills\curated-memory (Join-Path $codexHome "skills\curated-memory") -Recurse -Force
+Copy-Item .\skills-codex\curated-memory (Join-Path $codexHome "skills\curated-memory") -Recurse -Force
 Copy-Item .\memories\memory_state.db (Join-Path $codexHome "memories\memory_state.db") -Force
 ```
 
@@ -116,13 +156,47 @@ CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
 mkdir -p "$CODEX_HOME/skills" "$CODEX_HOME/memories"
 
 cp AGENTS-LITE.md "$CODEX_HOME/AGENTS.md"
-cp -R skills/curated-memory "$CODEX_HOME/skills/curated-memory"
+cp -R skills-codex/curated-memory "$CODEX_HOME/skills/curated-memory"
 cp memories/memory_state.db "$CODEX_HOME/memories/memory_state.db"
 ```
 
 You can skip copying `memory_state.db` and run `init`; the CLI will create the same schema.
 
-For PLUS manual install, copy `AGENTS-PLUS.md` to `AGENTS.md` and copy `skills/curated-memory-plus` instead.
+For PLUS manual install, copy `AGENTS-PLUS.md` to `AGENTS.md` and copy `skills-codex/curated-memory-plus` instead.
+
+## Manual Install For Claude Code
+
+Pick your Claude home directory:
+
+- If `CLAUDE_HOME` is set, use that.
+- Otherwise use `~/.claude` on macOS/Linux.
+- On Windows, `~` usually resolves to `%USERPROFILE%`, so the default is `%USERPROFILE%\.claude`.
+
+### PowerShell
+
+```powershell
+$claudeHome = if ($env:CLAUDE_HOME) { $env:CLAUDE_HOME } else { Join-Path $HOME ".claude" }
+New-Item -ItemType Directory -Force -Path $claudeHome | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $claudeHome "skills") | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $claudeHome "memories") | Out-Null
+
+Copy-Item .\CLAUDE-LITE.md (Join-Path $claudeHome "CLAUDE.md") -Force
+Copy-Item .\skills-claude\curated-memory (Join-Path $claudeHome "skills\curated-memory") -Recurse -Force
+Copy-Item .\memories\memory_state.db (Join-Path $claudeHome "memories\memory_state.db") -Force
+```
+
+### macOS/Linux
+
+```bash
+CLAUDE_HOME="${CLAUDE_HOME:-$HOME/.claude}"
+mkdir -p "$CLAUDE_HOME/skills" "$CLAUDE_HOME/memories"
+
+cp CLAUDE-LITE.md "$CLAUDE_HOME/CLAUDE.md"
+cp -R skills-claude/curated-memory "$CLAUDE_HOME/skills/curated-memory"
+cp memories/memory_state.db "$CLAUDE_HOME/memories/memory_state.db"
+```
+
+For PLUS manual install, copy `CLAUDE-PLUS.md` to `CLAUDE.md` and copy `skills-claude/curated-memory-plus` instead.
 
 ## Initialize Or Repair
 
@@ -135,6 +209,8 @@ You can override the database location:
 ```bash
 CODEX_MEMORY_DB=/path/to/memory_state.db python ~/.codex/skills/curated-memory/scripts/memory.py init
 ```
+
+For Claude Code, use `CLAUDE_MEMORY_DB` and the equivalent `~/.claude/skills/...` script path.
 
 ## Common Commands
 
@@ -205,7 +281,7 @@ In PLUS mode, `--include-messages` searches `messages` through `sessions` and ap
 
 Both LITE and PLUS enable query retries by default. If the original natural-language query returns no results, the CLI retries with derived significant terms up to `--max-retries` (default `5`) and returns a `search_attempts` audit list. Disable this with `--no-retry-queries`.
 
-The AGENTS profiles add a second semantic retry layer for the AI agent. If deterministic retries return no useful context, the agent should run up to 3 additional searches with rewritten queries based on synonyms, project-specific nouns, filenames, feature names, API names, session titles in PLUS, or broader concepts from the user's request.
+The AGENTS and CLAUDE profiles add a second semantic retry layer for the AI agent. If deterministic retries return no useful context, the agent should run up to 3 additional searches with rewritten queries based on synonyms, project-specific nouns, filenames, feature names, API names, session titles in PLUS, or broader concepts from the user's request.
 
 ## Data Model
 

@@ -15,21 +15,25 @@ Usage:
   npx memory-state-codex [options]
 
 Options:
-  --plus              Install PLUS mode with mandatory session/message logging.
-  --codex-home <path>  Install into this Codex home instead of CODEX_HOME or ~/.codex.
-  --force-db          Replace an existing memories/memory_state.db template.
-  --replace-agents    Replace the entire AGENTS.md file instead of managing a block.
-  --dry-run           Show what would change without writing files.
-  -h, --help          Show this help.
+  --plus                 Install PLUS mode with mandatory session/message logging.
+  --provider <name>      Install provider: both, codex, or claude. Default: both.
+  --codex-home <path>    Install into this Codex home instead of CODEX_HOME or ~/.codex.
+  --claude-home <path>   Install into this Claude home instead of CLAUDE_HOME or ~/.claude.
+  --force-db             Replace an existing memories/memory_state.db template.
+  --replace-agents       Replace the entire AGENTS.md/CLAUDE.md file instead of managing a block.
+  --dry-run              Show what would change without writing files.
+  -h, --help             Show this help.
 `);
 }
 
 function parseArgs(argv) {
   const options = {
+    claudeHome: null,
     codexHome: null,
     dryRun: false,
     forceDb: false,
     plus: false,
+    provider: "both",
     replaceAgents: false,
   };
 
@@ -43,6 +47,16 @@ function parseArgs(argv) {
       options.forceDb = true;
     } else if (arg === "--plus") {
       options.plus = true;
+    } else if (arg === "--provider") {
+      const value = argv[index + 1];
+      if (!value) {
+        throw new Error("--provider requires a value: both, codex, or claude");
+      }
+      if (!["both", "codex", "claude"].includes(value)) {
+        throw new Error("--provider must be one of: both, codex, claude");
+      }
+      options.provider = value;
+      index += 1;
     } else if (arg === "--replace-agents") {
       options.replaceAgents = true;
     } else if (arg === "--codex-home") {
@@ -51,6 +65,13 @@ function parseArgs(argv) {
         throw new Error("--codex-home requires a path");
       }
       options.codexHome = value;
+      index += 1;
+    } else if (arg === "--claude-home") {
+      const value = argv[index + 1];
+      if (!value) {
+        throw new Error("--claude-home requires a path");
+      }
+      options.claudeHome = value;
       index += 1;
     } else {
       throw new Error(`Unknown option: ${arg}`);
@@ -63,6 +84,35 @@ function parseArgs(argv) {
 function resolveCodexHome(options) {
   const configured = options.codexHome || process.env.CODEX_HOME;
   return path.resolve(configured || path.join(os.homedir(), ".codex"));
+}
+
+function resolveClaudeHome(options) {
+  const configured = options.claudeHome || process.env.CLAUDE_HOME;
+  return path.resolve(configured || path.join(os.homedir(), ".claude"));
+}
+
+function providerConfigs(options) {
+  const selected = options.provider === "both" ? ["codex", "claude"] : [options.provider];
+  return selected.map((provider) => {
+    if (provider === "codex") {
+      return {
+        name: "codex",
+        label: "Codex",
+        home: resolveCodexHome(options),
+        profileFile: options.plus ? "AGENTS-PLUS.md" : "AGENTS-LITE.md",
+        targetProfile: "AGENTS.md",
+        skillSourceDir: "skills-codex",
+      };
+    }
+    return {
+      name: "claude",
+      label: "Claude Code",
+      home: resolveClaudeHome(options),
+      profileFile: options.plus ? "CLAUDE-PLUS.md" : "CLAUDE-LITE.md",
+      targetProfile: "CLAUDE.md",
+      skillSourceDir: "skills-claude",
+    };
+  });
 }
 
 function ensureDir(dir, dryRun) {
@@ -140,16 +190,16 @@ function mergeAgents(existing, block) {
   return `${existing.trimEnd()}${separator}${block}`;
 }
 
-function installAgents(codexHome, options) {
-  const source = path.join(PACKAGE_ROOT, options.plus ? "AGENTS-PLUS.md" : "AGENTS-LITE.md");
-  const target = path.join(codexHome, "AGENTS.md");
+function installProfile(provider, options) {
+  const source = path.join(PACKAGE_ROOT, provider.profileFile);
+  const target = path.join(provider.home, provider.targetProfile);
   const sourceText = fs.readFileSync(source, "utf8");
   const nextText = options.replaceAgents
     ? `${sourceText.trimEnd()}\n`
     : mergeAgents(fs.existsSync(target) ? fs.readFileSync(target, "utf8") : "", managedBlock(sourceText));
 
   if (fs.existsSync(target) && fs.readFileSync(target, "utf8") === nextText) {
-    console.log(`AGENTS.md already up to date: ${target}`);
+    console.log(`${provider.targetProfile} already up to date: ${target}`);
     return;
   }
 
@@ -160,25 +210,25 @@ function installAgents(codexHome, options) {
   } else {
     fs.writeFileSync(target, nextText, "utf8");
   }
-  console.log(`Installed AGENTS.md instructions: ${target}`);
+  console.log(`Installed ${provider.targetProfile} instructions: ${target}`);
   if (backup) {
     console.log(`Backup created: ${backup}`);
   }
 }
 
-function installSkill(codexHome, options) {
+function installSkill(provider, options) {
   const skillName = options.plus ? "curated-memory-plus" : "curated-memory";
-  const source = path.join(PACKAGE_ROOT, "skills", skillName);
-  const target = path.join(codexHome, "skills", skillName);
+  const source = path.join(PACKAGE_ROOT, provider.skillSourceDir, skillName);
+  const target = path.join(provider.home, "skills", skillName);
 
   ensureDir(path.dirname(target), options.dryRun);
   copyRecursive(source, target, options.dryRun);
-  console.log(`Installed ${skillName} skill: ${target}`);
+  console.log(`Installed ${provider.label} ${skillName} skill: ${target}`);
 }
 
-function installMemoryTemplate(codexHome, options) {
+function installMemoryTemplate(provider, options) {
   const source = path.join(PACKAGE_ROOT, "memories", "memory_state.db");
-  const target = path.join(codexHome, "memories", "memory_state.db");
+  const target = path.join(provider.home, "memories", "memory_state.db");
 
   ensureDir(path.dirname(target), options.dryRun);
   if (fs.existsSync(target) && !options.forceDb) {
@@ -203,21 +253,27 @@ function main() {
     return;
   }
 
-  const codexHome = resolveCodexHome(options);
-  console.log(`Codex home: ${codexHome}`);
   console.log(`Mode: ${options.plus ? "PLUS" : "LITE"}`);
+  console.log(`Provider: ${options.provider}`);
 
-  ensureDir(codexHome, options.dryRun);
-  installAgents(codexHome, options);
-  installSkill(codexHome, options);
-  installMemoryTemplate(codexHome, options);
+  const providers = providerConfigs(options);
+  for (const provider of providers) {
+    console.log("");
+    console.log(`${provider.label} home: ${provider.home}`);
+    ensureDir(provider.home, options.dryRun);
+    installProfile(provider, options);
+    installSkill(provider, options);
+    installMemoryTemplate(provider, options);
+  }
 
   const skillName = options.plus ? "curated-memory-plus" : "curated-memory";
-  const memoryScript = path.join(codexHome, "skills", skillName, "scripts", "memory.py");
   console.log("");
   console.log("Done.");
-  console.log(`Initialize or repair schema: python "${memoryScript}" init`);
-  console.log(`Inspect memory store:       python "${memoryScript}" inspect`);
+  for (const provider of providers) {
+    const memoryScript = path.join(provider.home, "skills", skillName, "scripts", "memory.py");
+    console.log(`${provider.label} initialize or repair schema: python "${memoryScript}" init`);
+    console.log(`${provider.label} inspect memory store:       python "${memoryScript}" inspect`);
+  }
 }
 
 try {
