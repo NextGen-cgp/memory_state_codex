@@ -1,6 +1,6 @@
 ---
 name: curated-memory-plus
-description: Persistent curated memory plus mandatory session/message traceability for Codex using a global SQLite database. Use when Codex needs to initialize, inspect, search, add, update, or delete durable memory across sessions and projects; when a user asks to remember facts, preferences, decisions, constraints, or prior work; or when starting substantial work that must log sessions and messages for searchable history.
+description: ALWAYS ACTIVE - Persistent curated memory plus mandatory session/message traceability for Codex using a global SQLite database. Use when Codex needs to initialize, inspect, search, add, update, or delete durable memory across sessions and projects; when a user asks to remember facts, preferences, decisions, constraints, or prior work; or when starting substantial work that must log sessions and messages for searchable history.
 ---
 
 # Curated Memory Plus

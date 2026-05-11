@@ -1,6 +1,6 @@
 ---
 name: curated-memory
-description: Persistent curated memory for Codex using a global SQLite database. Use when Codex needs to initialize, inspect, search, add, update, or delete durable memory across sessions and projects; when a user asks to remember facts, preferences, decisions, constraints, or prior work; or when starting substantial work that may benefit from previously curated context.
+description: ALWAYS ACTIVE - Persistent curated memory for Codex using a global SQLite database. Use when Codex needs to initialize, inspect, search, add, update, or delete durable memory across sessions and projects; when a user asks to remember facts, preferences, decisions, constraints, or prior work; or when starting substantial work that may benefit from previously curated context.
 ---
 
 # Curated Memory
