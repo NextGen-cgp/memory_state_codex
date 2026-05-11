@@ -1,4 +1,0 @@
-interface:
-  display_name: "Curated Memory"
-  short_description: "Persist curated agent memory in SQLite"
-  default_prompt: "Use $curated-memory to save and retrieve durable project memory."
